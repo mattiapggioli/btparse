@@ -87,13 +87,23 @@ class BTParser:
         )
         # 'Ultimo: 109,15 Cedola: 3,625 Scadenza: 01/11/2026'
         regex_by_key = [
-            ("cedola", r"Cedola: ([\d,]+)"),
-            ("ultimo", r"Ultimo: ([\d,]+)"),
-            ("scadenza", r"Scadenza: (\d+/\d+/\d+)"),
+            {"key": "cedola", "regex": r"Cedola: ([\d,]+)", "float": True},
+            {"key": "ultimo", "regex": r"Ultimo: ([\d,]+)", "float": True},
+            {
+                "key": "scadenza",
+                "regex": r"Scadenza: (\d+/\d+/\d+)",
+                "float": False,
+            },
         ]
-        for key, regex in regex_by_key:
-            match = re.search(regex, text_in_div1, re.IGNORECASE)
-            btp[key] = match.group(1) if match else None
+        for rbk in regex_by_key:
+            match = re.search(rbk["regex"], text_in_div1)
+            if match is None:
+                btp[rbk["key"]] = None
+                continue
+            if rbk["float"]:
+                btp[rbk["key"]] = float(match.group(1).replace(",", "."))
+                continue
+            btp[rbk["key"]] = match.group(1)
         return btp
 
     def parse(self, page: int = 0) -> List[Dict[str, any]]:
